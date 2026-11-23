@@ -23,6 +23,7 @@ static const char *ANTECEDENTES[MAX_ANTECEDENTES] = {
     "Combate", "Labuta", "Negocios", "Exploracao",
     "Montaria", "Medicina", "Tradicao", "Roubo"
 };
+
 static const char *HABILIDADES[] = {
     "Light My Fire", "Let's Dance", "Fortunate Son", "Don't Stop Believing",
     "Immigrant Song", "Gimme Shelter", "Another One Bites the Dust",
@@ -32,6 +33,7 @@ static const char *HABILIDADES[] = {
     "A Horse with No Name", "I Want to Hold Your Hand", "Paranoid", "Ramble On",
     "Aqualung", "More Than a Feeling"
 };
+
 #define QTD_HABILIDADES ((int)(sizeof(HABILIDADES)/sizeof(HABILIDADES[0])))
 
 /* Registro binário: o status permite exclusão lógica sem remover bytes do arquivo. */
@@ -64,7 +66,9 @@ typedef struct {
 } Personagem;
 
 static void pausar(void) { printf("\nPressione ENTER para continuar..."); int c; while ((c=getchar())!='\n' && c!=EOF) {} }
+
 static void linha(void) { puts("======================================================================"); }
+
 static void limpar_tela(void) {
 #ifdef _WIN32
     system("cls");
@@ -72,6 +76,7 @@ static void limpar_tela(void) {
     printf("\033[2J\033[H");
 #endif
 }
+
 static void ler_texto(const char *rotulo, char *dest, size_t tam) {
     printf("%s", rotulo);
     if (fgets(dest, (int)tam, stdin)) {
@@ -79,6 +84,7 @@ static void ler_texto(const char *rotulo, char *dest, size_t tam) {
         else { int c; while((c=getchar())!='\n' && c!=EOF){} }
     }
 }
+
 static int ler_int(const char *rotulo, int min, int max) {
     char buf[80], *fim; long v;
     for (;;) {
@@ -90,6 +96,7 @@ static int ler_int(const char *rotulo, int min, int max) {
         printf("Valor invalido. Informe um numero entre %d e %d.\n",min,max);
     }
 }
+
 static double ler_double(const char *rotulo, double min, double max) {
     char buf[80], *fim; double v;
     for (;;) {
@@ -101,13 +108,16 @@ static double ler_double(const char *rotulo, double min, double max) {
         printf("Valor invalido. Informe um valor entre %.2f e %.2f.\n",min,max);
     }
 }
+
 static FILE *abrir_db(const char *modo) { return fopen(DB_FILE,modo); }
+
 static int proximo_id(void) {
     FILE *f=abrir_db("rb"); Personagem p; int maior=0;
     if(!f) return 1;
     while(fread(&p,sizeof p,1,f)==1) if(p.id>maior) maior=p.id;
     fclose(f); return maior+1;
 }
+
 static int localizar(int id, Personagem *saida, long *posicao) {
     FILE *f=abrir_db("rb"); Personagem p; long pos=0;
     if(!f) return 0;
@@ -117,10 +127,12 @@ static int localizar(int id, Personagem *saida, long *posicao) {
     }
     fclose(f); return 0;
 }
+
 static int gravar_novo(const Personagem *p) {
     FILE *f=abrir_db("ab"); if(!f) { perror("Nao foi possivel abrir o banco"); return 0; }
     int ok=fwrite(p,sizeof *p,1,f)==1; fclose(f); return ok;
 }
+
 static int atualizar_registro(const Personagem *p) {
     FILE *f=abrir_db("r+b"); long pos;
     if(!f) return 0;
@@ -128,12 +140,14 @@ static int atualizar_registro(const Personagem *p) {
     if(fseek(f,pos,SEEK_SET)!=0) { fclose(f); return 0; }
     int ok=fwrite(p,sizeof *p,1,f)==1; fclose(f); return ok;
 }
+
 static int contar_ativos(void) {
     FILE *f=abrir_db("rb"); Personagem p; int n=0;
     if(!f) return 0;
     while(fread(&p,sizeof p,1,f)==1) if(p.ativo) n++;
     fclose(f); return n;
 }
+
 static void exibir_menu(void) {
     limpar_tela(); linha();
     puts("                 O SOM DAS SEIS | REGISTRO DE PERSONAGENS");
@@ -150,6 +164,7 @@ static void exibir_menu(void) {
     puts("  0. Sair");
     linha();
 }
+
 static void mostrar_ficha(const Personagem *p) {
     linha(); printf(" FICHA #%d | %s\n",p->id,p->nome); linha();
     printf("Jogador: %s | Idade: %d | Nivel: %d | XP: %d\n",p->jogador,p->idade,p->nivel,p->xp);
@@ -167,6 +182,7 @@ static void mostrar_ficha(const Personagem *p) {
     printf("Cartas de Sina (%d/%d):\n",p->qtd_cartas,MAX_CARTAS); for(int i=0;i<p->qtd_cartas;i++) printf("  - %s\n",p->cartas[i]);
     printf("Anotacoes: %s\n",p->anotacoes); linha();
 }
+
 static void escolher_tormento(char *dest, size_t tam) {
     static const char *t[6][6] = {
       {"Vinganca pelo amor da minha vida","Vinganca pelos meus filhos","Vinganca por minha terra roubada","Vinganca pela morte de um parceiro","Vinganca pela minha tribo","Vinganca pelo fim da minha gangue"},
@@ -183,6 +199,7 @@ static void escolher_tormento(char *dest, size_t tam) {
     snprintf(dest,tam,"%s",t[coluna][linha]);
     printf("Tormento definido: %s\n",dest);
 }
+
 static void criar_personagem(void) {
     Personagem p; memset(&p,0,sizeof p); p.id=proximo_id(); p.ativo=1; p.nivel=1; p.dinheiro=150.0;
     strcpy(p.reputacao,"Sem reputacao definida"); strcpy(p.anotacoes,"-");
@@ -200,6 +217,7 @@ static void criar_personagem(void) {
         int op=ler_int("1-Fisico  2-Agilidade  3-Intelecto  4-Coragem: ",1,4);
         if(op==1)p.fisico++; else if(op==2)p.agilidade++; else if(op==3)p.intelecto++; else p.coragem++;
         restantes--;
+        limpar_tela();
     }
     p.pv_max=6; for(int i=0;i<p.fisico;i++) p.pv_max += 5; /* valor-base; rolagem individual pode ser ajustada */
     printf("PV inicial: regra = 6 + 1d6+2 por ponto em Fisico.\n");
@@ -214,12 +232,14 @@ static void criar_personagem(void) {
         int op=ler_int("Escolha o antecedente: ",1,MAX_ANTECEDENTES)-1;
         if(p.antecedentes[op]>=2) puts("Limite inicial de 2 pontos atingido nesse antecedente.");
         else {p.antecedentes[op]++; restantes--;}
+        limpar_tela();
     }
     /* Intelecto concede pontos extras de Antecedente, respeitando o limite inicial. */
     for(int k=0;k<p.intelecto;k++) {
         printf("Ponto adicional de Antecedente concedido por Intelecto (%d/%d).\n",k+1,p.intelecto);
         for(int i=0;i<MAX_ANTECEDENTES;i++) printf("%d. %-13s (%d)\n",i+1,ANTECEDENTES[i],p.antecedentes[i]);
         int op=ler_int("Escolha (1-8): ",1,8)-1; p.antecedentes[op]++;
+        limpar_tela();
     }
     puts("\nHABILIDADES: escolha duas habilidades iniciais.");
     for(int i=0;i<QTD_HABILIDADES;i++) printf("%2d. %s\n",i+1,HABILIDADES[i]);
@@ -229,20 +249,22 @@ static void criar_personagem(void) {
         if(duplicada) puts("Habilidade ja selecionada."); else strcpy(p.habilidades[p.qtd_habilidades++],HABILIDADES[op]);
     }
     puts("\nTORmento: escolha sorteio pela tabela do livro (2D6, coluna e linha)."); escolher_tormento(p.tormento,sizeof p.tormento);
-    ler_texto("Reputacao inicial (ENTER para 'Sem reputacao definida'): ",p.reputacao,sizeof p.reputacao);
+    ler_texto("\nReputacao inicial (ENTER para 'Sem reputacao definida'): ",p.reputacao,sizeof p.reputacao);
     if(!p.reputacao[0]) strcpy(p.reputacao,"Sem reputacao definida");
     p.reputacao_valor=ler_int("Valor da reputacao (-1, 0 ou 1): ",-1,1);
     puts("\nEquipamento inicial: o personagem comeca com $150. Cadastre itens separados.");
-    int mais=ler_int("Deseja cadastrar um item agora? 1-Sim 0-Nao: ",0,1);
-    while(mais && p.qtd_itens<MAX_ITENS) { ler_texto("Descricao do item: ",p.itens[p.qtd_itens],MAX_TEXTO); if(p.itens[p.qtd_itens][0])p.qtd_itens++; mais=ler_int("Adicionar outro item? 1-Sim 0-Nao: ",0,1); }
-    p.dinheiro=ler_double("Dinheiro restante apos compras ($): ",0,1000000);
+    int mais=ler_int("\nDeseja cadastrar um item agora? 1-Sim 0-Nao: ",0,1);
+    while(mais && p.qtd_itens<MAX_ITENS) { ler_texto("Descricao do item: ",p.itens[p.qtd_itens],MAX_TEXTO); if(p.itens[p.qtd_itens][0])p.qtd_itens++; mais=ler_int("\nAdicionar outro item? 1-Sim 0-Nao: ",0,1); }
+    p.dinheiro=ler_double("\nDinheiro restante apos compras ($): ",0,1000000);
     ler_texto("Anotacoes adicionais: ",p.anotacoes,sizeof p.anotacoes);
     if(gravar_novo(&p)) printf("\nPersonagem criada com sucesso! Codigo: %d\n",p.id); else puts("Falha ao salvar personagem.");
 }
+
 static void consultar_personagem(void) {
     int id=ler_int("Codigo da personagem: ",1,100000000); Personagem p;
     if(localizar(id,&p,NULL)) mostrar_ficha(&p); else puts("Personagem ativa nao encontrada.");
 }
+
 static void listar_personagens(void) {
     FILE *f=abrir_db("rb"); Personagem p; int n=0;
     if(!f) { puts("Ainda nao ha banco de dados."); return; }
@@ -250,23 +272,26 @@ static void listar_personagens(void) {
     while(fread(&p,sizeof p,1,f)==1) if(p.ativo) { printf("%-6d | %-24s | %-18s | %2d | %2d/%-2d | $%.2f\n",p.id,p.nome,p.jogador,p.nivel,p.pv_atual,p.pv_max,p.dinheiro); n++; }
     fclose(f); if(!n) puts("Nenhuma personagem cadastrada.");
 }
+
 static void editar_personagem(void) {
     int id=ler_int("Codigo da personagem: ",1,100000000); Personagem p;
     if(!localizar(id,&p,NULL)) { puts("Personagem nao encontrada."); return; }
     puts("ENTER mantem o valor atual para campos textuais."); char b[MAX_TEXTO];
     printf("Nome atual: %s\n",p.nome); ler_texto("Novo nome: ",b,sizeof b); if(b[0]){ strncpy(p.nome,b,sizeof p.nome-1); p.nome[sizeof p.nome-1]='\0'; }
-    printf("Jogador atual: %s\n",p.jogador); ler_texto("Novo jogador: ",b,sizeof b); if(b[0]){ strncpy(p.jogador,b,sizeof p.jogador-1); p.jogador[sizeof p.jogador-1]='\0'; }
-    printf("Origem atual: %s\n",p.origem); ler_texto("Nova origem: ",b,sizeof b); if(b[0])snprintf(p.origem,sizeof p.origem,"%s",b);
-    printf("Descricao atual: %s\n",p.descricao); ler_texto("Nova descricao: ",b,sizeof b); if(b[0])snprintf(p.descricao,sizeof p.descricao,"%s",b);
-    if(atualizar_registro(&p)) puts("Ficha atualizada."); else puts("Nao foi possivel atualizar.");
+    printf("\nJogador atual: %s\n",p.jogador); ler_texto("Novo jogador: ",b,sizeof b); if(b[0]){ strncpy(p.jogador,b,sizeof p.jogador-1); p.jogador[sizeof p.jogador-1]='\0'; }
+    printf("\nOrigem atual: %s\n",p.origem); ler_texto("Nova origem: ",b,sizeof b); if(b[0])snprintf(p.origem,sizeof p.origem,"%s",b);
+    printf("\nDescricao atual: %s\n",p.descricao); ler_texto("Nova descricao: ",b,sizeof b); if(b[0])snprintf(p.descricao,sizeof p.descricao,"%s",b);
+    if(atualizar_registro(&p)) puts("\nFicha atualizada."); else puts("\nNao foi possivel atualizar.");
 }
+
 static void excluir_personagem(void) {
     int id=ler_int("Codigo a excluir: ",1,100000000); Personagem p;
     if(!localizar(id,&p,NULL)) { puts("Personagem nao encontrada."); return; }
     printf("Confirma exclusao logica de %s? 1-Sim 0-Nao: ",p.nome);
-    int op=ler_int("Opcao: ",0,1); if(!op)return; p.ativo=0;
+    int op=ler_int("\nOpcao: ",0,1); if(!op)return; p.ativo=0;
     if(atualizar_registro(&p)) puts("Registro marcado como excluido. Os dados permanecem no arquivo binario."); else puts("Falha na exclusao.");
 }
+
 static void gerenciar_campanha(void) {
     int id=ler_int("Codigo da personagem: ",1,100000000); Personagem p;
     if(!localizar(id,&p,NULL)) { puts("Personagem nao encontrada."); return; }
@@ -288,9 +313,11 @@ static void gerenciar_campanha(void) {
         else if(op==8) {for(int i=0;i<p.qtd_itens;i++)printf("%d. %s\n",i+1,p.itens[i]); if(p.qtd_itens){int k=ler_int("Numero do item a remover: ",1,p.qtd_itens)-1; for(int i=k;i<p.qtd_itens-1;i++)strcpy(p.itens[i],p.itens[i+1]); p.qtd_itens--;}}
         else if(op==9) {if(p.qtd_montarias<MAX_MONTARIAS){ler_texto("Nome e descricao da montaria: ",p.montarias[p.qtd_montarias],MAX_TEXTO); if(p.montarias[p.qtd_montarias][0])p.qtd_montarias++;}else puts("Limite de montarias atingido.");}
         else if(op==10) ler_texto("Anotacoes: ",p.anotacoes,sizeof p.anotacoes);
+        limpar_tela();
     } while(op!=0);
-    if(atualizar_registro(&p)) puts("Alteracoes salvas no arquivo binario."); else puts("Erro ao salvar alteracoes.");
+    if(atualizar_registro(&p)) puts("\nAlteracoes salvas no arquivo binario."); else puts("\nErro ao salvar alteracoes.");
 }
+
 static void exportar_um(FILE *f,const Personagem *p) {
     fprintf(f,"O SOM DAS SEIS - FICHA DE PERSONAGEM\nCodigo: %d\nNome: %s\nJogador: %s\nIdade: %d\nOrigem: %s\nConceito: %s\nNivel: %d | XP: %d\n\n",p->id,p->nome,p->jogador,p->idade,p->origem,p->descricao,p->nivel,p->xp);
     fprintf(f,"ATRIBUTOS\nFisico: %d | Agilidade: %d | Intelecto: %d | Coragem: %d\nPV: %d/%d | Iniciativa: %d | Defesa: %d | Acoes: %d\n\nANTECEDENTES\n",p->fisico,p->agilidade,p->intelecto,p->coragem,p->pv_atual,p->pv_max,p->iniciativa,p->defesa,p->acoes);
@@ -300,16 +327,18 @@ static void exportar_um(FILE *f,const Personagem *p) {
     fprintf(f,"\nDinheiro: $%.2f\nItens:\n",p->dinheiro); for(int i=0;i<p->qtd_itens;i++)fprintf(f,"- %s\n",p->itens[i]);
     fprintf(f,"Montarias:\n"); for(int i=0;i<p->qtd_montarias;i++)fprintf(f,"- %s\n",p->montarias[i]);
     fprintf(f,"Cartas de Sina: %d/2\n",p->qtd_cartas); for(int i=0;i<p->qtd_cartas;i++)fprintf(f,"- %s\n",p->cartas[i]);
-    fprintf(f,"Anotacoes: %s\n\n",p->anotacoes); linha(); fprintf(f,"\n");
+    fprintf(f,"Anotacoes: %s\n\n",p->anotacoes); fprintf(f,"\n");
 }
+
 static void exportar_txt(void) {
     char nome[128]; ler_texto("Nome do arquivo (ENTER = fichas_som_das_seis.txt): ",nome,sizeof nome);
     if(!nome[0])strcpy(nome,"fichas_som_das_seis.txt");
     FILE *db=abrir_db("rb"); if(!db){puts("Nao ha registros para exportar.");return;}
     FILE *out=fopen(nome,"w"); if(!out){perror("Falha ao criar TXT");fclose(db);return;}
-    Personagem p; int n=0; while(fread(&p,sizeof p,1,db)==1)if(p.ativo){exportar_um(out,&p);n++;}
+    Personagem p; int n=0; while(fread(&p,sizeof p,1,db)==1)if(p.ativo){if(n > 0)fprintf(out, "========================================\n\n");exportar_um(out,&p);n++;}
     fclose(db); fclose(out); printf("Exportacao concluida: %d ficha(s) em %s\n",n,nome);
 }
+
 static void relatorio(void) {
     FILE *f=abrir_db("rb"); Personagem p; int ativos=0, excluidos=0, soma_nivel=0; double dinheiro=0;
     if(f){while(fread(&p,sizeof p,1,f)==1){if(p.ativo){ativos++;soma_nivel+=p.nivel;dinheiro+=p.dinheiro;}else excluidos++;}fclose(f);}
@@ -319,11 +348,13 @@ static void relatorio(void) {
     else puts("Nenhuma personagem ativa cadastrada.");
     printf("Arquivo de dados: %s\nTamanho do registro: %lu bytes\n",DB_FILE,(unsigned long)sizeof(Personagem));
 }
+
 int main(void) {
     srand((unsigned)time(NULL));
     int op;
     do {
         exibir_menu(); op=ler_int("Escolha uma opcao: ",0,8);
+        limpar_tela();
         switch(op) {
             case 1: criar_personagem(); pausar(); break;
             case 2: consultar_personagem(); pausar(); break;
